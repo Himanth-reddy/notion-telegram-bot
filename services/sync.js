@@ -14,7 +14,7 @@ import {
 function mapToNotionProperties(details, type, providers) {
     const props = {
       "Title": { title: [{ text: { content: details.title || details.name } }] },
-      "Format": { select: { name: type === 'tv' ? '📺 TV Show' : '🎬 Movie' } },
+      "Format": { select: { name: type === 'tv' ? 'TV Show' : 'Movie' } },
       "IMDB": { number: details.vote_average ? Number(details.vote_average.toFixed(1)) : null },
       "TMDB_ID": { rich_text: [{ text: { content: String(details.id) } }] },
       "Status": { select: { name: "🧡 To Watch" } },
