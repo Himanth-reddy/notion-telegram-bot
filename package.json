@@ -1,16 +1,18 @@
 {
-  "name": "notion-tmdb-bot",
+  "name": "notion-telegram-bot",
   "version": "1.0.0",
-  "type": "module",
+  "description": "A Telegram bot to manage a movie and TV show watchlist in Notion.",
   "main": "bot.js",
+  "type": "module",
   "scripts": {
     "start": "node bot.js"
   },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-  "express": "^4.19.2",
-  "telegraf": "^4.12.2",
-  "node-fetch": "^3.3.2",
-  "dotenv": "^16.4.5",
-  "@notionhq/client": "^2.2.10"
-}
+    "@notionhq/client": "^2.2.15",
+    "dotenv": "^16.4.5",
+    "node-fetch": "^3.3.2",
+    "telegraf": "^4.16.3"
+  }
 }
