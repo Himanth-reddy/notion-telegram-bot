@@ -47,6 +47,25 @@ async function tmdbGetDetails(type, id) {
 }
 
 /**
+ * TMDB: Get streaming providers for a title
+ */
+async function tmdbGetProviders(type, id) {
+  assertEnv();
+  // Note: This fetches providers for the US market. You can change 'US' to your country code.
+  const url = `https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${tmdbToken}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`Could not fetch providers for ${type} ${id}.`);
+    return []; // Return an empty array if it fails
+  }
+  const data = await res.json();
+  // 'flatrate' usually means subscription services (like Netflix, Hulu)
+  const providers = data.results?.US?.flatrate || [];
+  // Format for Notion's multi-select or single-select property
+  return providers.map(p => ({ name: p.provider_name }));
+}
+
+/**
  * Maps TMDB data to Notion database properties.
  * @param {object} details The full TMDB details object.
  * @param {string} type 'movie' or 'tv'.
