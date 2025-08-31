@@ -7,6 +7,7 @@ import { addCommand } from './commands/add.js';
 import { searchCommand } from './commands/search.js';
 import { watchedCommand } from './commands/watched.js';
 import { watchingCommand } from './commands/watching.js';
+import { toWatchCommand } from './commands/towatch.js';
 
 // --- Environment Variable Setup ---
 const {
@@ -23,7 +24,6 @@ const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
 // --- Optional Middleware: Restrict bot to a specific chat ---
 bot.use((ctx, next) => {
-  // If ALLOWED_CHAT_ID is not set, the bot will be public.
   if (ALLOWED_CHAT_ID && String(ctx.chat?.id) !== String(ALLOWED_CHAT_ID)) {
     console.log(`🚫 Unauthorized access from chat ID: ${ctx.chat?.id}`);
     return ctx.reply("⛔️ You are not authorized to use this bot.");
@@ -37,6 +37,7 @@ bot.command("add", addCommand);
 bot.command("search", searchCommand);
 bot.command("watched", watchedCommand);
 bot.command("watching", watchingCommand);
+bot.command("towatch", toWatchCommand);
 
 // --- Start the bot ---
 bot.launch().then(() => {
@@ -44,6 +45,5 @@ bot.launch().then(() => {
 });
 
 // --- Graceful Stop ---
-// Enables the bot to shut down cleanly when you stop the process
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));

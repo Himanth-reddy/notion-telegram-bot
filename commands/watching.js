@@ -1,17 +1,19 @@
+// commands/watching.js
+
 import {
   notionFindByTmdbOrTitle,
   notionUpdatePage,
   notionFindByStatus
 } from '../services/notion.js';
 
-// This is the updated status text
+// This constant is set to the status you requested.
 const WATCHING_STATUS = "💛Watching";
 
 export const watchingCommand = async (ctx) => {
   const title = ctx.message.text.replace(/^\/watching/i, "").trim();
 
   if (title) {
-    // --- SCENARIO 1: Set a movie's status to "Watching" ---
+    // --- This is the logic that SETS a movie's status ---
     try {
       const results = await notionFindByTmdbOrTitle(null, title);
 
@@ -33,7 +35,7 @@ export const watchingCommand = async (ctx) => {
       await ctx.reply(`❌ An error occurred: ${e.message}`);
     }
   } else {
-    // --- SCENARIO 2: List all movies you are "Watching" ---
+    // --- This is the logic that LISTS all movies you're watching ---
     try {
       const results = await notionFindByStatus(WATCHING_STATUS);
       if (results.length === 0) {
