@@ -1,5 +1,4 @@
 import { Telegraf } from "telegraf";
-import express from "express";
 import "dotenv/config";
 import {
   syncOne,
@@ -11,9 +10,7 @@ const {
   TELEGRAM_BOT_TOKEN,
   NOTION_DB_ID,
   NOTION_TOKEN,
-  ALLOWED_CHAT_ID, // optional
-  WEBHOOK_URL,     // e.g. https://your-app.up.railway.app
-  PORT = 3000
+  ALLOWED_CHAT_ID // optional
 } = process.env;
 
 if (!TELEGRAM_BOT_TOKEN || !NOTION_DB_ID || !NOTION_TOKEN) {
@@ -135,14 +132,11 @@ bot.command("search", async (ctx) => {
   }
 });
 
-// ---------------- Webhook Setup ---------------- //
-const app = express();
-bot.telegram.setWebhook(`${WEBHOOK_URL}/bot${TELEGRAM_BOT_TOKEN}`);
-app.use(bot.webhookCallback(`/bot${TELEGRAM_BOT_TOKEN}`));
-
-// Health check
-app.get("/", (req, res) => res.send("✅ Bot is running on webhook mode"));
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
+// ---------------- Long Polling ---------------- //
+bot.launch().then(() => {
+  console.log("🤖 Bot started with long polling...");
 });
+
+// Graceful stop
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));
