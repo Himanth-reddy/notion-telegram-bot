@@ -53,17 +53,27 @@ async function tmdbGetDetails(type, id) {
  * @returns {object} A Notion properties object.
  */
 function mapToNotionProperties(details, type) {
-  return {
-    Name: { title: [{ text: { content: details.title || details.name } }] },
-    TMDB_ID: { rich_text: [{ text: { content: String(details.id) } }] },
-    Type: { select: { name: type === 'tv' ? '📺 TV Show' : '🎬 Movie' } },
-    Status: { select: { name: "🧡 To Watch" } }, // Default status
-    Rating: { number: details.vote_average ? Number(details.vote_average.toFixed(1)) : null },
-    ReleaseDate: {
-      date: { start: details.release_date || details.first_air_date || null },
-    },
-    Year: { number: new Date(details.release_date || details.first_air_date).getFullYear() || null },
+  // These keys now match your custom Notion property names
+  const props = {
+    "Title": { title: [{ text: { content: details.title || details.name } }] },
+    "Format": { select: { name: type === 'tv' ? 'TV Show' : 'Movie' } },
+    "IMDB": { number: details.vote_average ? Number(details.vote_average.toFixed(1)) : null },
+    "TMDB_ID": { rich_text: [{ text: { content: String(details.id) } }] },
+    "Status": { select: { name: "🧡 To Watch" } },
+    "Year": { number: new Date(details.release_date || details.first_air_date).getFullYear() || null },
+    "Genre": { multi_select: details.genres ? details.genres.map(g => ({ name: g.name })) : [] },
   };
+
+  // Add TV-show-specific properties
+  if (type === 'tv') {
+    props["Seasons"] = { number: details.number_of_seasons || null };
+    props["Total Eps"] = { number: details.number_of_episodes || null };
+  }
+  if (providers && providers.length > 0) {
+    props["Platform"] = { select: providers[0] };
+  }
+
+  return props;
 }
 
 /**
