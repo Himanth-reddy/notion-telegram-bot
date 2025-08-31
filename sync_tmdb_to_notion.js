@@ -148,6 +148,8 @@ export async function notionAppendPosterImage(pageId, imageUrl) {
  * The main sync function: searches TMDB, then creates or updates the entry in Notion.
  * @param {string} title The title of the movie/show to sync.
  */
+// In sync_tmdb_to_notion.js
+
 export async function syncOne(title) {
   assertEnv();
   const searchResult = await tmdbSearchTitle(title);
@@ -158,24 +160,28 @@ export async function syncOne(title) {
     throw new Error(`Found result for "${title}", but it is not a movie or TV show.`);
   }
 
-  const details = await tmdbGetDetails(mediaType, searchResult.id);
-  const props = mapToNotionProperties(details, mediaType);
+  const [details, providers] = await Promise.all([
+    tmdbGetDetails(mediaType, searchResult.id),
+    tmdbGetProviders(mediaType, searchResult.id)
+  ]);
+  
+  const props = mapToNotionProperties(details, mediaType, providers);
 
   const existingPages = await notionFindByTmdbOrTitle(details.id, null);
   let page;
 
   if (existingPages.length > 0) {
-    // Item already exists, update it
     page = await notionUpdatePage(existingPages[0].id, props);
     console.log(`✅ Updated existing entry: ${title}`);
   } else {
-    // Item is new, create it
     page = await notionCreatePage(props);
     console.log(`🆕 Created new entry: ${title}`);
   }
 
-  // Add the poster image if it exists
-  if (details.poster_path) {
-    await notionAppendPosterImage(page.id, `https://image.tmdb.org/t/p/w500${details.poster_path}`);
+  // --- THIS IS THE MODIFIED PART ---
+  // Check for 'backdrop_path' instead of 'poster_path'
+  if (details.backdrop_path) {
+    // Use a backdrop image size (w1280) and the backdrop_path
+    await notionAppendPosterImage(page.id, `https://image.tmdb.org/t/p/w1280${details.backdrop_path}`);
   }
 }
