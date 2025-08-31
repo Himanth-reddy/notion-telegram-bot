@@ -61,7 +61,9 @@ bot.command("status", async (ctx) => {
   const newStatus = args.pop();
   const title = args.join(" ");
   try {
-    const existing = await notionFindByTmdbOrTitle(title);
+    // BUG FIX: Add NOTION_DB_ID as the first argument
+    const existing = await notionFindByTmdbOrTitle(NOTION_DB_ID, null, title);
+
     if (!existing?.length) return ctx.reply(`❌ Not found: "${title}"`);
     const pageId = existing[0].id;
     await notionUpdatePage(pageId, { Status: { select: { name: newStatus } } });
@@ -75,7 +77,9 @@ bot.command("finish", async (ctx) => {
   const title = ctx.message.text.replace(/^\/finish/i, "").trim();
   if (!title) return ctx.reply("⚠️ Usage: /finish <title>");
   try {
-    const existing = await notionFindByTmdbOrTitle(title);
+    // BUG FIX: Add NOTION_DB_ID as the first argument
+    const existing = await notionFindByTmdbOrTitle(NOTION_DB_ID, null, title);
+    
     if (!existing?.length) return ctx.reply(`❌ Not found: "${title}"`);
     const pageId = existing[0].id;
     await notionUpdatePage(pageId, { Status: { select: { name: "✅ Finished" } } });
@@ -117,7 +121,9 @@ bot.command("search", async (ctx) => {
   const q = ctx.message.text.replace(/^\/search/i, "").trim();
   if (!q) return ctx.reply("⚠️ Usage: /search <title>");
   try {
-    const hits = await notionFindByTmdbOrTitle(q);
+    // BUG FIX: Add NOTION_DB_ID as the first argument
+    const hits = await notionFindByTmdbOrTitle(NOTION_DB_ID, null, q);
+    
     if (!hits?.length) return ctx.reply(`No matches for "${q}".`);
     const lines = hits.map((r) => {
       const p = r.properties;
