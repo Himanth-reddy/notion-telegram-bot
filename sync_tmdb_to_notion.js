@@ -17,9 +17,7 @@ function assertEnv() {
 }
 
 /**
- * Searches for a movie or TV show on TMDB.
- * @param {string} title The title to search for.
- * @returns {Promise<object>} The first search result from TMDB.
+ * TMDB: Search for a movie or TV show.
  */
 async function tmdbSearchTitle(title) {
   assertEnv();
@@ -29,14 +27,11 @@ async function tmdbSearchTitle(title) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`TMDB search failed with status: ${res.status}`);
   const data = await res.json();
-  return data.results[0]; // Return the top result
+  return data.results[0];
 }
 
 /**
- * Gets full details for a specific TMDB item.
- * @param {string} type 'movie' or 'tv'.
- * @param {number} id The TMDB ID.
- * @returns {Promise<object>} Full details of the item.
+ * TMDB: Get full details for a specific item.
  */
 async function tmdbGetDetails(type, id) {
   assertEnv();
@@ -56,23 +51,17 @@ async function tmdbGetProviders(type, id) {
   const res = await fetch(url);
   if (!res.ok) {
     console.warn(`Could not fetch providers for ${type} ${id}.`);
-    return []; // Return an empty array if it fails
+    return [];
   }
   const data = await res.json();
-  // 'flatrate' usually means subscription services (like Netflix, Hulu)
   const providers = data.results?.US?.flatrate || [];
-  // Format for Notion's multi-select or single-select property
   return providers.map(p => ({ name: p.provider_name }));
 }
 
 /**
  * Maps TMDB data to Notion database properties.
- * @param {object} details The full TMDB details object.
- * @param {string} type 'movie' or 'tv'.
- * @returns {object} A Notion properties object.
  */
-function mapToNotionProperties(details, type) {
-  // These keys now match your custom Notion property names
+function mapToNotionProperties(details, type, providers) {
   const props = {
     "Title": { title: [{ text: { content: details.title || details.name } }] },
     "Format": { select: { name: type === 'tv' ? 'TV Show' : 'Movie' } },
@@ -83,11 +72,11 @@ function mapToNotionProperties(details, type) {
     "Genre": { multi_select: details.genres ? details.genres.map(g => ({ name: g.name })) : [] },
   };
 
-  // Add TV-show-specific properties
   if (type === 'tv') {
     props["Seasons"] = { number: details.number_of_seasons || null };
     props["Total Eps"] = { number: details.number_of_episodes || null };
   }
+
   if (providers && providers.length > 0) {
     props["Platform"] = { select: providers[0] };
   }
@@ -97,37 +86,27 @@ function mapToNotionProperties(details, type) {
 
 /**
  * Finds an item in the Notion database by its TMDB ID or title.
- * @param {string | null} tmdbId The TMDB ID to search for.
- * @param {string | null} title The title to search for.
- * @returns {Promise<Array>} An array of matching Notion pages.
  */
 export async function notionFindByTmdbOrTitle(tmdbId, title) {
   assertEnv();
   const filterConditions = [];
-
   if (tmdbId) {
     filterConditions.push({ property: "TMDB_ID", rich_text: { equals: String(tmdbId) } });
   }
   if (title) {
-    // Note: Notion API title filters are case-sensitive.
-    filterConditions.push({ property: "Name", title: { equals: title } });
+    filterConditions.push({ property: "Title", title: { equals: title } });
   }
-
   if (filterConditions.length === 0) return [];
 
   const response = await notion.databases.query({
     database_id: databaseId,
-    filter: {
-      or: filterConditions,
-    },
+    filter: { or: filterConditions },
   });
   return response.results;
 }
 
 /**
  * Creates a new page in the Notion database.
- * @param {object} properties The properties for the new page.
- * @returns {Promise<object>} The created Notion page object.
  */
 export async function notionCreatePage(properties) {
   assertEnv();
@@ -139,9 +118,6 @@ export async function notionCreatePage(properties) {
 
 /**
  * Updates an existing Notion page's properties.
- * @param {string} pageId The ID of the page to update.
- * @param {object} properties The properties to update.
- * @returns {Promise<object>} The updated Notion page object.
  */
 export async function notionUpdatePage(pageId, properties) {
   assertEnv();
@@ -149,26 +125,19 @@ export async function notionUpdatePage(pageId, properties) {
 }
 
 /**
- * Appends a poster image block to a Notion page.
- * @param {string} pageId The ID of the page to add the image to.
- * @param {string} imageUrl The URL of the poster image.
+ * Appends an image block to a Notion page.
  */
 export async function notionAppendPosterImage(pageId, imageUrl) {
   assertEnv();
   await notion.blocks.children.append({
     block_id: pageId,
-    children: [
-      { object: "block", type: "image", image: { external: { url: imageUrl } } },
-    ],
+    children: [{ object: "block", type: "image", image: { external: { url: imageUrl } } }],
   });
 }
 
 /**
  * The main sync function: searches TMDB, then creates or updates the entry in Notion.
- * @param {string} title The title of the movie/show to sync.
  */
-// In sync_tmdb_to_notion.js
-
 export async function syncOne(title) {
   assertEnv();
   const searchResult = await tmdbSearchTitle(title);
@@ -197,10 +166,7 @@ export async function syncOne(title) {
     console.log(`🆕 Created new entry: ${title}`);
   }
 
-  // --- THIS IS THE MODIFIED PART ---
-  // Check for 'backdrop_path' instead of 'poster_path'
   if (details.backdrop_path) {
-    // Use a backdrop image size (w1280) and the backdrop_path
     await notionAppendPosterImage(page.id, `https://image.tmdb.org/t/p/w1280${details.backdrop_path}`);
   }
 }
