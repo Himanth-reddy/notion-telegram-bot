@@ -5,14 +5,14 @@ const { Client } = pkg;
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
 const tmdbToken = process.env.TMDB_TOKEN;
-const databaseId = process.env.NOTION_DATABASE_ID;
+const databaseId = process.env.NOTION_DB_ID;
 
 /**
  * Utility to check required env vars.
  */
 function assertEnv() {
   if (!process.env.NOTION_TOKEN) throw new Error("NOTION_TOKEN not set");
-  if (!process.env.NOTION_DATABASE_ID) throw new Error("NOTION_DATABASE_ID not set");
+  if (!process.env.NOTION_DB_ID) throw new Error("NOTION_DB_ID not set");
   if (!process.env.TMDB_TOKEN) throw new Error("TMDB_TOKEN not set");
 }
 
