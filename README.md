@@ -24,21 +24,23 @@ This project was built to solve the problem of manually maintaining a media watc
 
 This project uses a modern, modular Node.js architecture:
 
-  * **Runtime:** [Node.js](https://nodejs.org/)
+  * **Runtime:** Node.js
   * **Telegram Bot Framework:** [Telegraf.js](https://telegraf.js.org/)
   * **APIs:**
       * [Notion API](https://developers.notion.com/)
       * [The Movie Database (TMDB) API](https://www.themoviedb.org/documentation/api)
-  * **Deployment:** [Railway](https://railway.app/)
+  * **Deployment:** [Vercel](https://vercel.com/)
 
 -----
 
 ## Project Structure
 
-The codebase is organized into a clean, maintainable structure that separates concerns into distinct layers.
+The codebase is organized into a clean, maintainable structure that separates concerns into distinct layers. Vercel automatically recognizes this structure as a serverless function.
 
 ```
 /
+├── api/                  // Vercel serverless functions are placed in this directory
+│   ├── bot.js
 ├── commands/             // Handles logic for each user-facing command
 │   ├── add.js
 │   ├── search.js
@@ -47,8 +49,7 @@ The codebase is organized into a clean, maintainable structure that separates co
 │   ├── notion.js
 │   ├── tmdb.js
 │   └── sync.js
-├── .env                  // Stores secret API keys
-├── bot.js                // Main file to start the bot
+├── .env                  // Stores secret API keys (for local development)
 └── package.json
 ```
 
@@ -80,37 +81,55 @@ To get a local copy up and running, follow these simple steps.
     npm install
     ```
 4.  **Create your environment file**
-    Create a file named `.env` in the root of the project and add your secret keys:
+    Create a file named `.env` in the root of the project and add your secret keys for local development:
     ```env
     TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
     NOTION_TOKEN="YOUR_NOTION_INTEGRATION_TOKEN"
     NOTION_DB_ID="YOUR_NOTION_DATABASE_ID"
     TMDB_TOKEN="YOUR_TMDB_API_KEY"
+    ALLOWED_CHAT_ID="YOUR_TELEGRAM_CHAT_ID"
     ```
 5.  **Set up your Notion Database**
       * Make sure your Notion database has the required properties (Title, Format, IMDB, Status, etc.) that match the code in `services/sync.js`.
       * Share your database with the Notion integration you created.
-  
 
-## Deployment with Railway
+## Deployment with Vercel
 
-Here’s how to deploy the bot using Railway:
+Here’s how to deploy the bot using Vercel's serverless platform.
 
-1.  **Create a Railway Account**
-    Go to **railway.app**, sign up, and connect your GitHub account.
+1.  **Create a Vercel Account**
+    Go to **vercel.com**, sign up, and connect your GitHub account.
 
-2.  **Deploy from GitHub**
+2.  **Import Your Project**
 
-      * On your Railway dashboard, click **New Project** and select **Deploy from GitHub repo**.
-      * Choose your `notion-telegram-bot` repository and click **Deploy**.
+      * From your Vercel dashboard, click **New Project** and select **Import Git Repository**.
+      * Choose your `notion-telegram-bot` repository and click **Deploy**. Vercel will automatically detect that this is a Node.js project.
 
 3.  **Configure Environment Variables**
 
-      * Once deployed, go to your new service and click the **Variables** tab.
-      * Add the same secret keys that are in your local `.env` file (`TELEGRAM_BOT_TOKEN`, `NOTION_TOKEN`, etc.).
+      * Vercel does not use your local `.env` file. You must add the variables directly in the dashboard.
+      * Go to your project's **Settings** \> **Environment Variables**.
+      * Add the following variables with their secret values for the appropriate environments (e.g., "Production", "Preview"):
+          * `TELEGRAM_BOT_TOKEN`
+          * `NOTION_TOKEN`
+          * `NOTION_DB_ID`
+          * `TMDB_TOKEN`
+          * `ALLOWED_CHAT_ID`
+      * Once variables are added, they will be applied to your next deployment.
 
-4.  **Automatic Deployment**
-    Railway will automatically use the `npm start` command to run your bot. You can view the live logs in the **Deployments** tab.
+4.  **Set the Telegram Webhook**
+
+      * After your project is deployed, your bot will be live at a URL like `https://<your-project>.vercel.app/api/bot`.
+      * You need to tell Telegram to send messages to this URL. You can do this by opening the following URL in your browser, replacing the tokens and domain with your own values:
+        ```
+        https://api.telegram.org/bot<YOUR_TELEGRAM_BOT_TOKEN>/setWebhook?url=https://<your-project-domain>.vercel.app/api/bot
+        ```
+      * You should see a success message like `{"ok":true,"result":true,"description":"Webhook was set"}`.
+
+5.  **View Logs**
+
+      * You can view real-time runtime logs from your Vercel dashboard to monitor your bot's activity and debug any issues.
+      * Go to your project's **Deployments** tab and click on the latest deployment to see the logs.
 
 -----
 
